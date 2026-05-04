@@ -1,0 +1,36 @@
+name: Archive Factorio FFF
+
+on:
+  schedule:
+    - cron: '0 18 * * 0' # 18:00 UTC every Sun
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install feedparser requests beautifulsoup4
+
+      - name: Run scraper
+        run: python fetch_fff.py
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "FFF-Archive-Bot"
+          git config --global user.email "actions@github.com"
+          git add archive/
+          
+          # This line prevents the workflow from failing if there are no new files
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Archive FFF with media" && git push)
